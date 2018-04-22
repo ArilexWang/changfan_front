@@ -34,8 +34,8 @@
     <!--热门维修-->
     <div id="popular" class="box box-tb box-pack-center box-align-center navBox main-background">
       <div class="fs36" style="color:white;margin:40px">热门维修故障</div>
-      <div class="box box-lr box-wrap" >
-        <a href="#appointment" class="inline-box" >
+      <div class="box box-lr box-wrap">
+        <a href="#appointment" class="inline-box">
           <div class="box box-tb" v-for="(item,index) in popular" @click="popularClick(item)" :key="index" style="background:white;width:200px;margin:20px;border-radius:10px;padding:10px;">
             <p class="fs28" style="margin:5px">{{item.fields._modelName}}</p>
             <p style="margin:5px">{{item.fields._name}}</p>
@@ -70,11 +70,11 @@
       <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;">
         <p style="margin:10px">机型选择</p>
         <el-select class="inline-box mg10" v-model="brandLable" clearable placeholder="品牌" @change="brandSelect">
-          <el-option  v-for="(item,index) in brands" :key="index" :label="item.fields._name" :value="item.pk">
+          <el-option v-for="(item,index) in brands" :key="index" :label="item.fields._name" :value="item.pk">
           </el-option>
         </el-select>
-        <el-select class="inline-box mg10" v-model="modelLable" clearable placeholder="型号" @change="modelSelect" no-data-text="请先选择手机品牌"	>
-          <el-option  v-for="(item,index) in models" :key="item.pk" :label="item.fields._name" :value="item.pk">
+        <el-select class="inline-box mg10" v-model="modelLable" clearable placeholder="型号" @change="modelSelect" no-data-text="请先选择手机品牌">
+          <el-option v-for="(item,index) in models" :key="item.pk" :label="item.fields._name" :value="item.pk">
           </el-option>
         </el-select>
         <el-select class="inline-box mg10" v-model="detailLable" clearable placeholder="故障选择" @change="detailSelect" no-data-text="请先选择手机型号">
@@ -120,7 +120,7 @@
 </template>
 
 <script>
-import { getAllBanner, getPopularMalfunctionDetail,getAllBrands,getElectronicsModelByBrand, getMalfunctionDetailByModel } from './api';
+import { getAllBanner, getPopularMalfunctionDetail, getAllBrands, getElectronicsModelByBrand, getMalfunctionDetailByModel, createRepairOrder } from './api';
 import host from './host'
 import CityInfo from './city-data'
 export default {
@@ -146,11 +146,11 @@ export default {
       brands: [],
       models: [],
       details: [],
-      orderTypes:[{
+      orderTypes: [{
         value: 0,
         label: "上门维修"
-      },{
-        value:1,
+      }, {
+        value: 1,
         label: "到店维修"
       }],
       order: {
@@ -162,16 +162,17 @@ export default {
         comment: "",
         modelID: "",
         detailID: "",
+        token: 0
       },
-      brandLable:"",
-      modelLable:"",
-      detailLable:"",
-      priceLable:"",
+      brandLable: "",
+      modelLable: "",
+      detailLable: "",
+      priceLable: "",
       orderTypeLable: "",
       detailAddress: "",
       _province: "",
-      _city:"",
-      _region:"",
+      _city: "",
+      _region: "",
       telLegal: true
     }
   },
@@ -194,18 +195,18 @@ export default {
         this.popular = res.data
       })
     },
-    popularClick(value){
+    popularClick(value) {
       this.modelLable = value.fields._modelName
       this.detailLable = value.fields._name
       this.priceLable = value.fields._price
       this.brandLable = value.fields._brandName
-      order.modelID = value.fields._electronicsModel
-      order.detailID = value.pk
+      this.order.modelID = value.fields._electronicsModel
+      this.order.detailID = value.pk
     },
-    getBrands(){
+    getBrands() {
       getAllBrands().then((res) => {
-          console.log(res.data)
-          this.brands = res.data;
+        console.log(res.data)
+        this.brands = res.data;
       })
     },
     handleChange(value) {
@@ -218,7 +219,7 @@ export default {
         this.province.push(CityInfo[item])
       }
     },
-    brandSelect(e){
+    brandSelect(e) {
       console.log(e)
       var para = {
         brandID: e
@@ -229,17 +230,17 @@ export default {
         this.models = res.data
       })
     },
-    getMalfunctionDetail(modelID){
+    getMalfunctionDetail(modelID) {
       var para = { modelID: modelID }
       para = JSON.stringify(para)
-      getMalfunctionDetailByModel(para).then((res)=> {
+      getMalfunctionDetailByModel(para).then((res) => {
         console.log(res)
         this.details = res.data
       })
     },
-    modelSelect(e){
+    modelSelect(e) {
       let obj = {};
-      obj = this.models.find((item)=>{
+      obj = this.models.find((item) => {
         return item.pk === e;
       })
       console.log(obj)
@@ -247,9 +248,9 @@ export default {
       this.order.modelID = e
       this.getMalfunctionDetail(e)
     },
-    detailSelect(e){
+    detailSelect(e) {
       let obj = {};
-      obj = this.details.find((item)=>{
+      obj = this.details.find((item) => {
         return item.pk === e;
       })
 
@@ -257,7 +258,7 @@ export default {
       this.order.detailID = e
       this.priceLable = obj.fields._price
     },
-    orderTypeSelect(value){
+    orderTypeSelect(value) {
     },
     myAddressCity() {
       var value = this.form.city
@@ -292,20 +293,24 @@ export default {
         }
       }
     },
-    orderSubmit(e){
-      console.log(this.order)  
-      if(this.order.tel.length != 11){
-         this.telLegal = false
-      } else{
-        this.telLegal = true
-      }
+    orderSubmit(e) {
       this.myAddressCity()
       this.myAddressErae()
       this.myAddressMinerae()
       let address = this._province + this._city + this._region + this.detailAddress
-      this.$alert('稍后会有维修工程师电话联系你哒，请保持手机的畅通。', '订单提交成功', {
-         
-        });
+      this.order.address = address
+      if (this.order.tel.length != 11) {
+        this.telLegal = false
+      } else {
+        this.telLegal = true
+        var para = JSON.stringify(this.order)
+        createRepairOrder(para).then((res) => {
+          console.log(res)
+          this.$alert('稍后会有维修工程师电话联系你哒，请保持手机的畅通。', '订单提交成功', {
+            confirmButtonText: '确定',
+          });
+        })
+      }
     }
   },
   mounted() {
@@ -561,28 +566,30 @@ img {
   display: block;
   margin-top: 48px;
 }
-.el-cascader-menu__item{
+
+.el-cascader-menu__item {
   display: block;
-}
-.el-select-dropdown__item{
-  display: block;
-}
-.illegal .el-input__inner {
-    -webkit-appearance: none;
-    background-color: #fff6f6;
-    background-image: none;
-    border-radius: 4px;
-    border: 1px solid red;
-    box-sizing: border-box;
-    color: #606266;
-    display: inline-block;
-    font-size: inherit;
-    height: 40px;
-    line-height: 40px;
-    outline: 0;
-    padding: 0 15px;
-    transition: border-color .2s cubic-bezier(.645,.045,.355,1);
-    width: 100%;
 }
 
+.el-select-dropdown__item {
+  display: block;
+}
+
+.illegal .el-input__inner {
+  -webkit-appearance: none;
+  background-color: #fff6f6;
+  background-image: none;
+  border-radius: 4px;
+  border: 1px solid red;
+  box-sizing: border-box;
+  color: #606266;
+  display: inline-block;
+  font-size: inherit;
+  height: 40px;
+  line-height: 40px;
+  outline: 0;
+  padding: 0 15px;
+  transition: border-color .2s cubic-bezier(.645, .045, .355, 1);
+  width: 100%;
+}
 </style>

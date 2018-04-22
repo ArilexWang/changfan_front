@@ -57,3 +57,11 @@ export const getMalfunctionDetailByModel = params => {
             } 
     });
 };
+
+export const createRepairOrder = params => {
+    return instance.post(host + "createRepairOrder/",params,{
+          headers: {
+              'Content-Type': 'application/json'
+            } 
+    });
+};
