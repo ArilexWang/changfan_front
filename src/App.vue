@@ -89,6 +89,7 @@
           </el-option>
         </el-select>
       </div>
+
       <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;">
         <p v-if="telLegal" style="margin:10px">预留信息</p>
         <p v-else class="mg10" style="margin-bottom:25px">预留信息</p>
@@ -98,6 +99,13 @@
         <div v-else>
           <el-input class="mg10 illegal" v-model="order.tel" placeholder="电话号码（必填）" style="width:400px;"></el-input>
           <p style="font-size:12px;color:red;margin-top:0;margin-bottom:0;margin-left:14px;">请输入正确的手机号</p>
+        </div>
+      </div>
+      <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;margin-left:0px">
+        <p style="margin:10px">预约时间</p>
+        <div class="" style="display:block">
+          <el-date-picker class="mg10" style="display:block" v-model="order.serveTime" type="datetime" value-format="yyyy年MM月dd日HH时MM分" placeholder="选择日期时间">
+          </el-date-picker>
         </div>
       </div>
       <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;">
@@ -173,7 +181,8 @@ export default {
       _province: "",
       _city: "",
       _region: "",
-      telLegal: true
+      telLegal: true,
+      serveTime: "",
     }
   },
   methods: {
@@ -486,12 +495,6 @@ a:active {
   margin-left: 80px;
 }
 
-li {
-  list-style: none;
-  display: inline-block;
-  padding-left: 49px;
-  color: #333333;
-}
 
 .subtitle {
   float: left;
