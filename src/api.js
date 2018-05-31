@@ -65,3 +65,11 @@ export const createRepairOrder = params => {
             } 
     });
 };
+
+export const createQuickOrder = params => {
+    return instance.post(host + "createQuickOrder/",params,{
+          headers: {
+              'Content-Type': 'application/json'
+            } 
+    });
+};

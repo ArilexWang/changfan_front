@@ -12,13 +12,13 @@
           <a href="">首页</a>
         </div>
         <div class="" style="margin:15px">
-          <a href="#popular">热门活动</a>
+          <a href="#popular">快速下单</a>
         </div>
         <div class="" style="margin:15px">
           <a href="#appointment">预约下单</a>
         </div>
         <div class="" style="margin:15px">
-          <a href="">优质服务</a>
+          <a href="">平台介绍</a>
         </div>
 
       </div>
@@ -31,26 +31,34 @@
         </el-carousel-item>
       </el-carousel>
     </div>
-    <!--热门维修-->
-    <div id="popular" class="box box-tb box-pack-center box-align-center navBox main-background">
-      <div class="fs36" style="color:white;margin:40px">热门维修故障</div>
-      <div class="box box-lr box-wrap">
-        <a href="#appointment" class="inline-box">
-          <div class="box box-tb" v-for="(item,index) in popular" @click="popularClick(item)" :key="index" style="background:white;width:200px;margin:20px;border-radius:10px;padding:10px;">
-            <p class="fs28" style="margin:5px">{{item.fields._modelName}}</p>
-            <p style="margin:5px">{{item.fields._name}}</p>
-            <p class="box" style="margin:5px">
-              <span class="inline-box" style="color:#c9c9c9;font-size:14px;line-height:30px;">￥</span>
-              <span class="inline-box main-color fs24" style="line-height: 24px;">{{item.fields._price}}</span>
-              <span style="display: inline-block;float:right;color: #c9c9c9;font-size: 14px;line-height: 28px;cursor: pointer;margin-left:50px">立即下单 ></span>
-            </p>
-          </div>
-        </a>
+    <!--快捷下单-->
+    <div id="popular" class="box box-tb box-pack-center box-align-center navBox main-background" style="margin-top:40px;">
+      <div class="fs36" style="color:white;margin:40px">快速下单</div>
+      <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;">
+        <p v-if="telLegal" style="margin:10px;color:white">预留信息</p>
+        <p v-else class="mg10" style="margin-bottom:25px;color:white">预留信息</p>
+        <el-input v-if="telLegal" class="mg10" v-model="quickOrder.name" placeholder="姓名（必填）" style="width:195px"></el-input>
+        <el-input v-else class="mg10" v-model="quickOrder.name" placeholder="姓名（必填）" style="width:195px;margin-bottom:25px"></el-input>
+        <el-input v-if="telLegal" class="mg10" v-model="quickOrder.tel" placeholder="电话号码（必填）" style="width:400px"></el-input>
+        <div v-else>
+          <el-input class="mg10 illegal" v-model="quickOrder.tel" placeholder="电话号码（必填）" style="width:400px;"></el-input>
+          <p style="font-size:12px;color:red;margin-top:0;margin-bottom:0;margin-left:14px;">请输入正确的手机号</p>
+        </div>
       </div>
+      <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;">
+        <p style="margin:10px;color:white">您的地址</p>
+        <el-cascader :options="CityInfo" style="margin-left:10px;" v-model="selectedOptions" :change-on-select="true" :clearable="true" :filterable="true" @change="quickHandleChange">
+        </el-cascader>
+      </div>
+      <div class="box box-align-center box-pack-start" style="margin-top:10px;width: 750px;">
+        <p style="margin:10px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+        <el-input class="mg10" v-model="quickOrderDetailAddress" placeholder="具体街道地址" style="width:625px"></el-input>
+      </div>
+      <button class="submitbtn1" @click="quickOrderSubmit">立即下单</button>
     </div>
 
     <div id="appointment" class="box box-tb navBox box-align-center">
-      <p class="fs36" style="margin-top:40px;">我要预约</p>
+      <p class="fs36" style="margin-top:40px;">立即预约</p>
       <ul class="show">
         <li>
           手机型号
@@ -129,7 +137,7 @@
 </template>
 
 <script>
-import { getAllBanner, getPopularMalfunctionDetail, getAllBrands, getElectronicsModelByBrand, getMalfunctionDetailByModel, createRepairOrder } from './api';
+import { getAllBanner, getPopularMalfunctionDetail, getAllBrands, getElectronicsModelByBrand, getMalfunctionDetailByModel, createRepairOrder, createQuickOrder } from './api';
 import host from './host'
 import CityInfo from './city-data'
 export default {
@@ -148,6 +156,7 @@ export default {
         minerae: '',
         selectedOptions: [],//地区筛选数组
       },
+      selectedOptions:[],
       CityInfo: CityInfo,
       province: [],
       banner: [],
@@ -173,6 +182,13 @@ export default {
         detailID: "",
         token: 0
       },
+      quickOrder:{
+        tel:"",
+        name:"",
+        address: "",
+        token: 0
+      },
+      quickOrderDetailAddress:"",
       brandLable: "",
       modelLable: "",
       detailLable: "",
@@ -218,6 +234,11 @@ export default {
         console.log(res.data)
         this.brands = res.data;
       })
+    },
+    quickHandleChange(value){
+      this.form.city = this.selectedOptions[0];
+      this.form.erae = this.selectedOptions[1]
+      this.form.minerae = this.selectedOptions[2]
     },
     handleChange(value) {
       this.form.city = this.form.selectedOptions[0];
@@ -309,12 +330,32 @@ export default {
       this.myAddressMinerae()
       let address = this._province + this._city + this._region + this.detailAddress
       this.order.address = address
-      if (this.order.tel.length != 11) {
+      if (this.quickOrder.tel.length != 11) {
         this.telLegal = false
       } else {
         this.telLegal = true
         var para = JSON.stringify(this.order)
         createRepairOrder(para).then((res) => {
+          console.log(res)
+          this.$alert('稍后会有维修工程师电话联系你哒，请保持手机的畅通。', '订单提交成功', {
+            confirmButtonText: '确定',
+          });
+        })
+      }
+    },
+    quickOrderSubmit(){
+      this.myAddressCity()
+      this.myAddressErae()
+      this.myAddressMinerae()
+      let address = this._province + this._city + this._region + this.quickOrderDetailAddress
+      this.quickOrder.address = address
+      if (this.quickOrder.tel.length != 11) {
+        this.telLegal = false
+      } else {
+        this.telLegal = true
+        var para = JSON.stringify(this.quickOrder)
+        console.log(para);
+        createQuickOrder(para).then((res) => {
           console.log(res)
           this.$alert('稍后会有维修工程师电话联系你哒，请保持手机的畅通。', '订单提交成功', {
             confirmButtonText: '确定',
@@ -485,8 +526,8 @@ a:active {
 }
 
 .navBox {
-  min-width: 1300px;
-  width: 1200px;
+  min-width: 900px;
+  width: 800px;
   margin: 0 auto;
 }
 
@@ -570,6 +611,22 @@ img {
   display: block;
   margin-top: 48px;
 }
+
+.submitbtn1 {
+  width: 250px;
+  height: 64px;
+  background-color: white;
+  font-family: "PingFangSC-Regular", "Microsoft YaHei";
+  font-size: 24px;
+  border: 0;
+  color: #b31b10;
+  outline: none;
+  cursor: pointer;
+  margin: 0 auto;
+  display: block;
+  margin: 15px;
+}
+
 
 .el-cascader-menu__item {
   display: block;
